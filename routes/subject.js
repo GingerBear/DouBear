@@ -19,7 +19,6 @@ function parseSubject(body) {
   var $ = cheerio.load(body);
   var subjectScheme = {
     title: '',
-    href: '',
     image: '',
     description: '',
     attributes: [],
@@ -32,7 +31,7 @@ function parseSubject(body) {
   };
 
   return _.defaults({
-    title: $('h1').text(),
+    title: $('h1').text().trim(),
     image: $('.nbgnbg img').attr('src'),
     description: $('#link-report [property="v:summary"]').text().trim(),
     star: 0,
@@ -51,12 +50,12 @@ function parseAttributes($) {
     var values = [];
     $(item).find('.attrs > a').each((i, it) => {
       values.push({
-        name: $(it).text(),
+        name: $(it).text().trim(),
         href: $(it).attr('href'),
       });
     });
     attrs.push({
-      key: $(item).find('.pl').text(),
+      key: $(item).find('.pl').text().trim(),
       values: values,
     });
   });
@@ -80,7 +79,7 @@ function parseRelated($) {
   $('.recommendations-bd dl').each((i, dl) => {
     var dl = $(dl);
     related.push({
-      title: dl.find('dd a').text(),
+      title: dl.find('dd a').text().trim(),
       href: dl.find('dd a').attr('href'),
       image: dl.find('img').attr('src')
     });
@@ -95,11 +94,11 @@ function parseShortReviews($) {
   $('#hot-comments .comment-item').each((i, comm) => {
     var comm = $(comm);
     reviews.push({
-      reviewer: comm.find('.comment-info a[href]').text(),
+      reviewer: comm.find('.comment-info a[href]').text().trim(),
       stars: (comm.find('.comment-info .rating').attr('class') || 'allstarnull').match(/allstar(\w+)/).pop(),
       date: comm.find('.comment-info span').last().text().trim(),
-      votes: comm.find('.comment-vote .votes').text(),
-      content: comm.find('.comment > p').text()
+      votes: comm.find('.comment-vote .votes').text().trim(),
+      content: comm.find('.comment > p').text().trim()
     });
   });
 
@@ -115,10 +114,10 @@ function parseLongReviews($) {
     reviews.push({
       reviewer: review.find('.review-hd-avatar').attr('title'),
       href: review.find('.review-hd h3 a[onclick]').attr('href'),
-      title: review.find('.review-hd h3 a[onclick]').text(),
+      title: review.find('.review-hd h3 a[onclick]').text().trim(),
       stars: (review.find('[class*="allstar"]').attr('class') || 'allstarnull').match(/allstar(\w+)/).pop(),
       date: review.find('.review-hd-info > *').remove() && review.find('.review-hd-info').text().trim(),
-      votes: review.find('.review-short .review-short-ft').find('[id*="useful"]').text(),
+      votes: review.find('.review-short .review-short-ft').find('[id*="useful"]').text().trim(),
       content: review.find('.review-short > span').text().trim()
     });
   });
