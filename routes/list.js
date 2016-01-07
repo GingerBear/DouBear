@@ -10,7 +10,6 @@ module.exports = {
     if (request.query.start) {
       target += '&start=' + request.query.start;
     }
-    console.log(target)
 
     helpers.fetch(target, (error, response, body) => {
       var $ = cheerio.load(body);
