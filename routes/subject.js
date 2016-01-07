@@ -2,7 +2,6 @@ var cheerio = require('cheerio');
 var _ = require('lodash');
 var helpers = require('../lib/helpers');
 
-
 module.exports = {
   method: 'GET',
   path: '/subject/{subjecteId}',
