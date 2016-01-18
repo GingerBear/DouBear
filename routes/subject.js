@@ -8,28 +8,20 @@ module.exports = {
   handler: (request, reply) => {
     var target = 'http://movie.douban.com/subject/' + request.params.subjecteId + '/';
     helpers.fetch(target, (error, response, body) => {
-      var json = parseSubject(body);
-      reply(json);
+      parseSubject(body, function(err, json) {
+        if (err) {
+          return reply(json);
+        }
+        reply(json);
+      });
     });
   }
 };
 
-function parseSubject(body) {
+function parseSubject(body, callback) {
   var $ = cheerio.load(body);
-  var subjectScheme = {
-    title: '',
-    image: '',
-    description: '',
-    attributes: [],
-    star: 0,
-    ratingCount: 0,
-    images: [],
-    related: [],
-    shortReviews: {},
-    longReviews: {},
-  };
 
-  return _.defaults({
+  var json = {
     title: $('h1').text().trim(),
     image: $('.nbgnbg img').attr('src'),
     description: $('#link-report [property="v:summary"]').text().trim(),
@@ -40,7 +32,9 @@ function parseSubject(body) {
     related: parseRelated($),
     shortReviews: parseShortReviews($),
     longReviews: parseLongReviews($),
-  }, subjectScheme);
+  };
+
+  attachFullReviews(json, callback);
 }
 
 function parseAttributes($) {
@@ -120,6 +114,37 @@ function parseLongReviews($) {
       content: review.find('.review-short > span').text().trim()
     });
   });
-  
+
   return {reviews, moreLink};
+}
+
+function attachFullReviews(json, callback) {
+  console.time('fetch full reviews');
+  var urls = json.longReviews.reviews.map((review) => {
+    return review.href;
+  });
+
+  helpers.paralellFetch(urls, (err, results) => {
+    var reviews = results.map((body) => {
+      if (typeof body === 'string') {
+        return parseFullReview(body);
+      } else {
+        return 'not found';
+      }
+    });
+
+    // attach full review back
+    json.longReviews.reviews.forEach((review, i) => {
+      review.fullReview = reviews[i];
+    });
+
+    console.timeEnd('fetch full reviews');
+    callback(null, json);
+  });
+}
+
+function parseFullReview(body) {
+  var $ = cheerio.load(body);
+  var text = $('[property="v:description"]').html();
+  return text;
 }
